@@ -1,7 +1,7 @@
 export interface DefaultResponse {
-  message: string;
+	message: string;
 }
 
 export interface GetNotificationRecipientsResponse {
-  recipients: string[];
+	recipients: string[];
 }

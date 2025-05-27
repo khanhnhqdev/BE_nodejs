@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import {
-  registerStudents,
-  getCommonStudents,
-  suspendStudent,
-  getNotificationRecipients,
+	registerStudents,
+	getCommonStudents,
+	suspendStudent,
+	getNotificationRecipients,
 } from '../controller/teacher.controller';
 
 const router = Router();

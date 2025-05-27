@@ -1,14 +1,14 @@
 export interface RegisterStudentsRequest {
-  teacher: string;
-  students: string[];
+	teacher: string;
+	students: string[];
 }
 
 export interface SuspendStudentRequest {
-  student: string;
+	student: string;
 }
 
 
 export interface GetNotificationRecipientsRequest {
-  teacher: string;
-  notification: string;
+	teacher: string;
+	notification: string;
 }
