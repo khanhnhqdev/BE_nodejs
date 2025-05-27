@@ -1,48 +1,52 @@
 import { Request, Response, NextFunction } from 'express';
-import * as teacherService from '../service/teacher.service';
 import { GetNotificationRecipientsRequest, RegisterStudentsRequest, SuspendStudentRequest } from '../controller/request';
 import { GetNotificationRecipientsResponse } from './response';
+import { TeacherService } from '../service/teacher.service';
 
-export const registerStudents = async (req: Request<{}, {}, RegisterStudentsRequest>, res: Response, next: NextFunction) => {
-	try {
-		await teacherService.registerStudents(req.body);
-		res.status(204).send();
-	} catch (err) {
-		next(err);
-	}
-};
+export class TeacherController {
+	private teacherService: TeacherService;
 
-export const getCommonStudents = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const students = await teacherService.getCommonStudents(req.query);
-		res.json({ students });
-	} catch (err) {
-		next(err);
+	constructor() {
+		this.teacherService = new TeacherService(); // TODO: Use DI later
 	}
-};
 
-export const suspendStudent = async (
-	req: Request<{}, {}, SuspendStudentRequest>,
-	res: Response,
-	next: NextFunction
-) => {
-	try {
-		await teacherService.suspendStudent(req.body.student);
-		res.status(204).send();
-	} catch (err) {
-		next(err);
-	}
-};
+	public registerStudents = async (req: Request<{}, {}, RegisterStudentsRequest>, res: Response, next: NextFunction) => {
+		try {
+			await this.teacherService.registerStudents(req.body);
+			res.status(204).send();
+		} catch (err) {
+			next(err);
+		}
+	};
 
-export const getNotificationRecipients = async (
-	req: Request<{}, {}, GetNotificationRecipientsRequest>,
-	res: Response<GetNotificationRecipientsResponse>,
-	next: NextFunction
-) => {
-	try {
-		const recipients = await teacherService.getNotificationRecipients(req.body);
-		res.status(200).json({ recipients });
-	} catch (err) {
-		next(err);
-	}
-};
+	public getCommonStudents = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const students = await this.teacherService.getCommonStudents(req.query);
+			res.json({ students });
+		} catch (err) {
+			next(err);
+		}
+	};
+
+	public suspendStudent = async (req: Request<{}, {}, SuspendStudentRequest>, res: Response, next: NextFunction) => {
+		try {
+			await this.teacherService.suspendStudent(req.body.student);
+			res.status(204).send();
+		} catch (err) {
+			next(err);
+		}
+	};
+
+	public getNotificationRecipients = async (
+		req: Request<{}, {}, GetNotificationRecipientsRequest>,
+		res: Response<GetNotificationRecipientsResponse>,
+		next: NextFunction
+	) => {
+		try {
+			const recipients = await this.teacherService.getNotificationRecipients(req.body);
+			res.status(200).json({ recipients });
+		} catch (err) {
+			next(err);
+		}
+	};
+}

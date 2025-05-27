@@ -1,16 +1,12 @@
 import { Router } from 'express';
-import {
-	registerStudents,
-	getCommonStudents,
-	suspendStudent,
-	getNotificationRecipients,
-} from '../controller/teacher.controller';
+import { TeacherController } from '../controller/teacher.controller';
 
 const router = Router();
+const teacherController = new TeacherController(); // TODO: Inject this later
 
-router.post('/register', registerStudents);
-router.get('/commonstudents', getCommonStudents);
-router.post('/suspend', suspendStudent);
-router.post('/retrievefornotifications', getNotificationRecipients);
+router.post('/register', teacherController.registerStudents);
+router.get('/commonstudents', teacherController.getCommonStudents);
+router.post('/suspend', teacherController.suspendStudent);
+router.post('/retrievefornotifications', teacherController.getNotificationRecipients);
 
 export default router;

@@ -1,45 +1,64 @@
-import * as repository from '../repository/teacher.repository';
 import { BadRequestError } from '../middleware/error.middleware';
 import { RegisterStudentsRequest, GetNotificationRecipientsRequest } from '../controller/request';
+import { TeacherRepository } from '../repository/teacher.repository';
 
+export class TeacherService {
+	private repository: TeacherRepository;
 
-export const registerStudents = async ({ teacher, students }: RegisterStudentsRequest) => {
-    if (!teacher ||
-        !students ||
-        !Array.isArray(students) ||
-        students.length === 0) {
-        throw new BadRequestError('Invalid payload');
-    } 
-    await repository.register(teacher, students);
-};
+	constructor() {
+		// TODO: Replace manual instantiation with dependency injection
+		this.repository = new TeacherRepository();
+	}
 
-export const getCommonStudents = async (query: any) => {
-    const teachers = Array.isArray(query.teacher) ? query.teacher : [query.teacher];
-    if (!teachers[0]) throw new BadRequestError('Teacher email required');
-    return await repository.findCommonStudents(teachers);
-};
+	public async registerStudents({ teacher, students }: RegisterStudentsRequest): Promise<void> {
+		// Validate payload
+		if (!teacher || !Array.isArray(students) || students.length === 0) {
+			throw new BadRequestError('Invalid payload');
+		}
+		await this.repository.register(teacher, students);
+	}
 
-export const suspendStudent = async (studentEmail: string) => {
-    if (!studentEmail) throw new BadRequestError('Student email is required');
+	public async getCommonStudents(query: any): Promise<string[]> {
+		// Normalize input
+		const teachers = Array.isArray(query.teacher) ? query.teacher : [query.teacher];
 
-    const exists = await repository.checkStudentExists(studentEmail);
-    if (!exists) throw new BadRequestError(`Student ${studentEmail} not found`);
+		// Validate payload
+		if (!teachers[0]) {
+			throw new BadRequestError('Teacher email required');
+		}
+		return await this.repository.findCommonStudents(teachers);
+	}
 
-    await repository.suspend(studentEmail);
-};
+	public async suspendStudent(studentEmail: string): Promise<void> {
+		// Validate payload
+		if (!studentEmail) {
+			throw new BadRequestError('Student email is required');
+		}
 
+		// Check if student exists
+		const exists = await this.repository.checkStudentExists(studentEmail);
+		if (!exists) {
+			throw new BadRequestError(`Student ${studentEmail} not found`);
+		}
 
-export const getNotificationRecipients = async ({
-    teacher,
-    notification,
-}: GetNotificationRecipientsRequest): Promise<string[]> => {
-    if (!teacher || !notification) {
-        throw new BadRequestError('Invalid payload');
-    }
+		await this.repository.suspendStudent(studentEmail);
+	}
 
-    const mentionedEmails = [
-        ...new Set(notification.match(/(?<=@)[^\s@]+@[^\s@]+\.[^\s@]+/g) || []),
-    ];
+	public async getNotificationRecipients({
+		teacher,
+		notification,
+	}: GetNotificationRecipientsRequest): Promise<string[]> {
+		// Validate payload
+		if (!teacher || !notification) {
+			throw new BadRequestError('Invalid payload');
+		}
 
-    return await repository.getRecipients(teacher, mentionedEmails);
-};
+		// Extracts mentioned emails with two '@' symbols and a '.' (e.g. @user@example.com).
+		// Matches valid email patterns mentioned after '@' in the text.
+		const mentionedEmails = [
+			...new Set(notification.match(/(?<=@)[^\s@]+@[^\s@]+\.[^\s@]+/g) || []),
+		];
+
+		return await this.repository.getRecipients(teacher, mentionedEmails);
+	}
+}
