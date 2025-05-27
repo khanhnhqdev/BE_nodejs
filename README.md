@@ -23,21 +23,21 @@ You can test the endpoints by sending requests to this IP (e.g., `http://14.225.
 ```
 BE_nodejs/
 ├── src/
-│   ├── controller/         # Route handlers / Controllers
-│   ├── service/            # Business logic
-│   ├── repository/         # Data access layer (DB queries)
+│   ├── controller/                                # Route handlers / Controllers
+│   ├── service/                                   # Business logic
+│   ├── repository/                                # Data access layer (DB queries)
       ├── teacher.repository.interface.ts          # Interface for TeacherRepository
-      ├── TeacherRepository.ts                     # MySQL2 driver implementation
-│   ├── middleware/         # Express middlewares
-│   ├── database/           # Configuration files to connect to db
-│   └── app.ts, server.ts   # Entry point of the app
-├── test/                   # Unit tests
-├── docker-compose.yml      # Docker compose file to run the app + DB
-├── Dockerfile              # Dockerfile for building the app image
-├── .env.example            # Example environment variables file
-├── package.json            # Node.js dependencies and scripts
-└── README.md               # This documentation file
-└── postman_collection.json # postman json file to import
+      ├── mysql.teacher.repository.ts              # MySQL2 driver implementation
+│   ├── middleware/                                # Express middlewares
+│   ├── database/                                  # Configuration files to connect to db
+│   └── app.ts, server.ts                          # Entry point of the app
+├── test/                                          # Unit tests
+├── docker-compose.yml                             # Docker compose file to run the app + DB
+├── Dockerfile                                     # Dockerfile for building the app image
+├── .env.example                                   # Example environment variables file
+├── package.json                                   # Node.js dependencies and scripts
+└── README.md                                      # This documentation file
+└── postman_collection.json                        # postman json file to import
 
 ```
 ---
