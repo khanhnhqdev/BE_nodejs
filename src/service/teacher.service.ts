@@ -5,13 +5,12 @@ import { TeacherRepository } from '../repository/teacher.repository';
 export class TeacherService {
 	private repository: TeacherRepository;
 
-	constructor() {
-		// TODO: Replace manual instantiation with dependency injection
-		this.repository = new TeacherRepository();
+	constructor(repository: TeacherRepository) {
+		 // TODO: Replace manual instantiation with DI framework injection later
+		this.repository = repository;
 	}
 
 	public async registerStudents({ teacher, students }: RegisterStudentsRequest): Promise<void> {
-		// Validate payload
 		if (!teacher || !Array.isArray(students) || students.length === 0) {
 			throw new BadRequestError('Invalid payload');
 		}

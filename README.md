@@ -45,7 +45,7 @@ BE_nodejs/
 ### Prerequisites
 
 - Install [Docker](https://docs.docker.com/get-docker/)
-- (Optional) Install [Docker Compose](https://docs.docker.com/compose/install/)
+- Install [Docker Compose](https://docs.docker.com/compose/install/)
 
 ### Steps
 

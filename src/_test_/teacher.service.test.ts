@@ -1,186 +1,152 @@
-import * as teacherService from '../service/teacher.service';
-import * as repository from '../repository/teacher.repository';
+import { TeacherService } from '../service/teacher.service';
+import { TeacherRepository } from '../repository/teacher.repository';
 
 jest.mock('../repository/teacher.repository');
 
-const mockRegister = repository.register as jest.Mock;
-const mockFindCommonStudents = repository.findCommonStudents as jest.Mock;
-const mockCheckStudentExists = repository.checkStudentExists as jest.Mock;
-const mockSuspend = repository.suspend as jest.Mock;
-const mockGetRecipients = repository.getRecipients as jest.Mock;
+describe('TeacherService', () => {
+    let repository: jest.Mocked<TeacherRepository>;
+    let service: TeacherService;
 
-describe('registerStudents', () => {
-	beforeEach(() => {
-		jest.clearAllMocks();
-	});
+    beforeEach(() => {
+        // Create a mocked instance of TeacherRepository
+        repository = new TeacherRepository() as jest.Mocked<TeacherRepository>;
+        // Clear all mock calls and implementations before each test to avoid interference
+        jest.clearAllMocks();
 
-	it('should call repo.register with correct params', async () => {
-		const payload = {
-			teacher: 'teacherken@gmail.com',
-			students: ['student1@gmail.com', 'student2@gmail.com'],
-		};
+        service = new TeacherService(repository);
+    });
 
-		await teacherService.registerStudents(payload);
+    describe('registerStudents', () => {
+        it('should call repo.register with correct params', async () => {
+            const payload = {
+                teacher: 'teacherken@gmail.com',
+                students: ['student1@gmail.com', 'student2@gmail.com'],
+            };
 
-		expect(mockRegister).toHaveBeenCalledWith(payload.teacher, payload.students);
-	});
+            await service.registerStudents(payload);
 
-	it('should throw BadRequestError if payload is invalid', async () => {
-		await expect(teacherService.registerStudents({ teacher: '', students: [] }))
-			.rejects
-			.toThrow('Invalid payload');
-	});
+            expect(repository.register).toHaveBeenCalledWith(payload.teacher, payload.students);
+        });
 
-	it('should throw error if teacher is missing', async () => {
-		const payload = {
-			teacher: '',
-			students: ['student1@gmail.com'],
-		};
+        it('should throw BadRequestError if payload is invalid', async () => {
+            await expect(service.registerStudents({ teacher: '', students: [] }))
+                .rejects
+                .toThrow('Invalid payload');
+        });
 
-		await expect(teacherService.registerStudents(payload)).rejects.toThrow('Invalid payload');
-	});
+        it('should throw error if repo throws error', async () => {
+            const payload = {
+                teacher: 'teacherken@gmail.com',
+                students: ['student1@gmail.com'],
+            };
 
-	it('should throw error if students array is empty', async () => {
-		const payload = {
-			teacher: 'teacherken@gmail.com',
-			students: [],
-		};
+            repository.register.mockRejectedValue(new Error('DB error'));
+            await expect(service.registerStudents(payload)).rejects.toThrow('DB error');
+        });
+    });
 
-		await expect(teacherService.registerStudents(payload)).rejects.toThrow('Invalid payload');
-	});
+    describe('getCommonStudents', () => {
+        it('should call findCommonStudents with array of teachers', async () => {
+            const query = { teacher: ['t1@email.com', 't2@email.com'] };
+            const mockResult = ['student1@email.com'];
 
-	it('should throw error if repo throws error', async () => {
-		const payload = {
-			teacher: 'teacherken@gmail.com',
-			students: ['student1@gmail.com'],
-		};
+            repository.findCommonStudents.mockResolvedValue(mockResult);
+            const result = await service.getCommonStudents(query);
 
-		mockRegister.mockRejectedValue(new Error('DB error'));
+            expect(repository.findCommonStudents).toHaveBeenCalledWith(query.teacher);
+            expect(result).toEqual(mockResult);
+        });
 
-		await expect(teacherService.registerStudents(payload)).rejects.toThrow('DB error');
-	});
-});
+        it('should wrap single teacher into array and call findCommonStudents', async () => {
+            const query = { teacher: 't1@email.com' };
+            const mockResult = ['student1@email.com'];
 
+            repository.findCommonStudents.mockResolvedValue(mockResult);
+            const result = await service.getCommonStudents(query);
 
-describe('getCommonStudents', () => {
-	beforeEach(() => {
-		jest.clearAllMocks();
-	});
+            expect(repository.findCommonStudents).toHaveBeenCalledWith(['t1@email.com']);
+            expect(result).toEqual(mockResult);
+        });
 
-	it('should call findCommonStudents with array of teachers', async () => {
-		const query = { teacher: ['t1@email.com', 't2@email.com'] };
-		const mockResult = ['student1@email.com'];
+        it('should throw if teacher param is missing', async () => {
+            await expect(service.getCommonStudents({ teacher: '' }))
+                .rejects
+                .toThrow('Teacher email required');
+        });
+    });
 
-		mockFindCommonStudents.mockResolvedValue(mockResult);
+    describe('suspendStudent', () => {
+        it('should call checkStudentExists and suspend if exists', async () => {
+            repository.checkStudentExists.mockResolvedValue(true);
+            repository.suspendStudent.mockResolvedValue(undefined);
 
-		const result = await teacherService.getCommonStudents(query);
+            await service.suspendStudent('student@email.com');
 
-		expect(mockFindCommonStudents).toHaveBeenCalledWith(query.teacher);
-		expect(result).toEqual(mockResult);
-	});
+            expect(repository.checkStudentExists).toHaveBeenCalledWith('student@email.com');
+            expect(repository.suspendStudent).toHaveBeenCalledWith('student@email.com');
+        });
 
-	it('should wrap single teacher into array and call findCommonStudents', async () => {
-		const query = { teacher: 't1@email.com' };
-		const mockResult = ['student1@email.com'];
+        it('should throw if email is missing', async () => {
+            await expect(service.suspendStudent('')).rejects.toThrow('Student email is required');
+        });
 
-		mockFindCommonStudents.mockResolvedValue(mockResult);
+        it('should throw if student does not exist', async () => {
+            repository.checkStudentExists.mockResolvedValue(false);
+            await expect(service.suspendStudent('nonexist@email.com'))
+                .rejects
+                .toThrow('Student nonexist@email.com not found');
+        });
+    });
 
-		const result = await teacherService.getCommonStudents(query);
+    describe('getNotificationRecipients', () => {
+        it('should extract mentioned emails and call getRecipients', async () => {
+            const input = {
+                teacher: 'teacher@email.com',
+                notification: 'Hello students! @student1@email.com @student2@email.com @khanhemailwrong',
+            };
 
-		expect(mockFindCommonStudents).toHaveBeenCalledWith(['t1@email.com']);
-		expect(result).toEqual(mockResult);
-	});
+            const expectedEmails = ['student1@email.com', 'student2@email.com'];
+            const expectedResult = ['student1@email.com', 'student2@email.com'];
 
-	it('should throw if teacher param is missing', async () => {
-		await expect(teacherService.getCommonStudents({ teacher: '' })).rejects.toThrow(
-			'Teacher email required'
-		);
-	});
-});
+            repository.getRecipients.mockResolvedValue(expectedResult);
+            const result = await service.getNotificationRecipients(input);
 
-describe('suspendStudent', () => {
-	beforeEach(() => {
-		jest.clearAllMocks();
-	});
+            expect(repository.getRecipients).toHaveBeenCalledWith(input.teacher, expectedEmails);
+            expect(result).toEqual(expectedResult);
+        });
 
-	it('should call checkStudentExists and suspend if exists', async () => {
-		mockCheckStudentExists.mockResolvedValue(true);
-		mockSuspend.mockResolvedValue(undefined);
+        it('should work with no mentions and return result from getRecipients', async () => {
+            const input = {
+                teacher: 'teacher@email.com',
+                notification: 'No one is mentioned here.',
+            };
 
-		await teacherService.suspendStudent('student@email.com');
+            repository.getRecipients.mockResolvedValue([]);
+            const result = await service.getNotificationRecipients(input);
 
-		expect(mockCheckStudentExists).toHaveBeenCalledWith('student@email.com');
-		expect(mockSuspend).toHaveBeenCalledWith('student@email.com');
-	});
+            expect(repository.getRecipients).toHaveBeenCalledWith(input.teacher, []);
+            expect(result).toEqual([]);
+        });
 
-	it('should throw if email is missing', async () => {
-		await expect(teacherService.suspendStudent('')).rejects.toThrow('Student email is required');
-	});
+        it('should throw if teacher or notification is missing', async () => {
+            await expect(
+                service.getNotificationRecipients({ teacher: '', notification: '' })
+            ).rejects.toThrow('Invalid payload');
+        });
 
-	it('should throw if student does not exist', async () => {
-		mockCheckStudentExists.mockResolvedValue(false);
+        it('should remove duplicate mentioned emails', async () => {
+            const input = {
+                teacher: 'teacher@email.com',
+                notification: 'Hi @s1@email.com again @s1@email.com',
+            };
 
-		await expect(teacherService.suspendStudent('nonexist@email.com')).rejects.toThrow(
-			'Student nonexist@email.com not found'
-		);
-	});
-});
+            const expectedUniqueEmails = ['s1@email.com'];
 
-describe('getNotificationRecipients', () => {
-	beforeEach(() => {
-		jest.clearAllMocks();
-	});
+            repository.getRecipients.mockResolvedValue(expectedUniqueEmails);
+            const result = await service.getNotificationRecipients(input);
 
-	it('should extract mentioned emails and call getRecipients', async () => {
-		const input = {
-			teacher: 'teacher@email.com',
-			notification: 'Hello students! @student1@email.com @student2@email.com',
-		};
-
-		const expectedEmails = ['student1@email.com', 'student2@email.com'];
-		const expectedResult = ['student1@email.com', 'student2@email.com'];
-
-		mockGetRecipients.mockResolvedValue(expectedResult);
-
-		const result = await teacherService.getNotificationRecipients(input);
-
-		expect(mockGetRecipients).toHaveBeenCalledWith(input.teacher, expectedEmails);
-		expect(result).toEqual(expectedResult);
-	});
-
-	it('should work with no mentions and return result from getRecipients', async () => {
-		const input = {
-			teacher: 'teacher@email.com',
-			notification: 'No one is mentioned here.',
-		};
-
-		mockGetRecipients.mockResolvedValue([]);
-
-		const result = await teacherService.getNotificationRecipients(input);
-
-		expect(mockGetRecipients).toHaveBeenCalledWith(input.teacher, []);
-		expect(result).toEqual([]);
-	});
-
-	it('should throw if teacher or notification is missing', async () => {
-		await expect(
-			teacherService.getNotificationRecipients({ teacher: '', notification: '' })
-		).rejects.toThrow('Invalid payload');
-	});
-
-	it('should remove duplicate mentioned emails', async () => {
-		const input = {
-			teacher: 'teacher@email.com',
-			notification: 'Hi @s1@email.com again @s1@email.com',
-		};
-
-		const expectedUniqueEmails = ['s1@email.com'];
-
-		mockGetRecipients.mockResolvedValue(expectedUniqueEmails);
-
-		const result = await teacherService.getNotificationRecipients(input);
-
-		expect(mockGetRecipients).toHaveBeenCalledWith(input.teacher, expectedUniqueEmails);
-		expect(result).toEqual(expectedUniqueEmails);
-	});
+            expect(repository.getRecipients).toHaveBeenCalledWith(input.teacher, expectedUniqueEmails);
+            expect(result).toEqual(expectedUniqueEmails);
+        });
+    });
 });
