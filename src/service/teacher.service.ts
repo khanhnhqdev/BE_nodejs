@@ -1,12 +1,12 @@
 import { BadRequestError } from '../middleware/error.middleware';
 import { RegisterStudentsRequest, GetNotificationRecipientsRequest } from '../controller/request';
-import { TeacherRepository } from '../repository/teacher.repository';
+import { ITeacherRepository } from '../repository/teacher.repository.interface';
 
 export class TeacherService {
-	private repository: TeacherRepository;
+	private repository: ITeacherRepository;
 
-	constructor(repository: TeacherRepository) {
-		 // TODO: Replace manual instantiation with DI framework injection later
+	constructor(repository: ITeacherRepository) {
+		// Repository injected from outside
 		this.repository = repository;
 	}
 

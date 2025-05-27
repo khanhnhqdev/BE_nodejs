@@ -1,7 +1,8 @@
 import db from '../database/index';
 import { RowDataPacket } from 'mysql2';
+import { ITeacherRepository } from './teacher.repository.interface';
 
-export class TeacherRepository {
+export class MySQLTeacherRepository implements ITeacherRepository {
 	public async register(teacher: string, students: string[]): Promise<void> {
 		const connection = await db.getConnection();
 		try {

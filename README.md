@@ -26,6 +26,8 @@ BE_nodejs/
 │   ├── controller/         # Route handlers / Controllers
 │   ├── service/            # Business logic
 │   ├── repository/         # Data access layer (DB queries)
+      ├── teacher.repository.interface.ts          # Interface for TeacherRepository
+      ├── TeacherRepository.ts                     # MySQL2 driver implementation
 │   ├── middleware/         # Express middlewares
 │   ├── database/           # Configuration files to connect to db
 │   └── app.ts, server.ts   # Entry point of the app

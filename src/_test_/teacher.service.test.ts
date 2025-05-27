@@ -1,15 +1,15 @@
 import { TeacherService } from '../service/teacher.service';
-import { TeacherRepository } from '../repository/teacher.repository';
+import { MySQLTeacherRepository } from '../repository/mysql.teacher.repository';
 
 jest.mock('../repository/teacher.repository');
 
 describe('TeacherService', () => {
-    let repository: jest.Mocked<TeacherRepository>;
+    let repository: jest.Mocked<MySQLTeacherRepository>;
     let service: TeacherService;
 
     beforeEach(() => {
         // Create a mocked instance of TeacherRepository
-        repository = new TeacherRepository() as jest.Mocked<TeacherRepository>;
+        repository = new MySQLTeacherRepository() as jest.Mocked<MySQLTeacherRepository>;
         // Clear all mock calls and implementations before each test to avoid interference
         jest.clearAllMocks();
 

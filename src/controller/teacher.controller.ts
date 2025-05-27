@@ -2,13 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 import { GetNotificationRecipientsRequest, RegisterStudentsRequest, SuspendStudentRequest } from '../controller/request';
 import { GetNotificationRecipientsResponse } from './response';
 import { TeacherService } from '../service/teacher.service';
+import { MySQLTeacherRepository } from '../repository/mysql.teacher.repository';
 
 export class TeacherController {
 	private teacherService: TeacherService;
 
 	constructor() {
-		this.teacherService = new TeacherService(); // TODO: Use DI later
-	}
+    	// TODO: Replace manual instantiation with dependency injection framework
+    	const repository = new MySQLTeacherRepository();
+    	this.teacherService = new TeacherService(repository);  
+  }
 
 	public registerStudents = async (req: Request<{}, {}, RegisterStudentsRequest>, res: Response, next: NextFunction) => {
 		try {
