@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 FROM node:20-alpine
 
 WORKDIR /app
@@ -8,7 +7,8 @@ RUN npm install
 
 COPY . .
 
-# Ensure .env is copied
-COPY .env .env
+RUN npm run build
 
-CMD ["npm", "run", "dev"] # hoặc ["node", "dist/index.js"]
+EXPOSE 3000
+
+CMD ["npm", "start"]
