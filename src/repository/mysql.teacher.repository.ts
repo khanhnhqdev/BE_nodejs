@@ -3,12 +3,14 @@ import { RowDataPacket } from 'mysql2';
 import { ITeacherRepository } from './teacher.repository.interface';
 
 export class MySQLTeacherRepository implements ITeacherRepository {
+
 	public async register(teacher: string, students: string[]): Promise<void> {
 		const connection = await db.getConnection();
 		try {
 			await connection.beginTransaction();
 
-			//Get teacher ID from email
+			// Get teacher ID from email
+			// Todo: map row to TypeScript interfaces like  `Teacher` if data structure becomes more complex or needs strict typing
 			const [teacherRows]: any = await connection.query('SELECT id FROM teachers WHERE email = ?', [teacher]);
 			const teacherId = teacherRows[0]?.id;
 			if (!teacherId) throw new Error('Teacher not found');
@@ -61,6 +63,7 @@ export class MySQLTeacherRepository implements ITeacherRepository {
 	}
 
 	public async checkStudentExists(studentEmail: string): Promise<boolean> {
+		// Todo: consider mapping the result to a Student interface if needed
 		const [rows]: any = await db.query('SELECT id FROM students WHERE email = ?', [studentEmail]);
 		return rows.length > 0;
 	}
@@ -72,6 +75,7 @@ export class MySQLTeacherRepository implements ITeacherRepository {
 	public async getRecipients(teacher: string, mentioned: string[]): Promise<string[]> {
 		// Students registered under the teacher and not suspended
 		// Union with students explicitly mentioned in @ format and not suspended
+		// Todo: consider mapping the result to a Student interface if needed
 		const sql = `
 			SELECT DISTINCT s.email
 			FROM students s

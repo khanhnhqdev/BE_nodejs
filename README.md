@@ -74,4 +74,9 @@ npm install
 npm run test
 ```
 
+## Notes
+
+- Currently, database query results are not strictly typed to the defined TypeScript interfaces (`Student`, `Teacher`).
+- Query results are loosely typed as `any` or similar for simplicity.
+- If query results or data structures become more complex, or are returned to other layers, proper mapping and typing with interfaces will be added.
 
